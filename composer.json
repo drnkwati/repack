@@ -34,8 +34,7 @@
         "illuminate/log": "5.0.*",
         "illuminate/mail": "5.0.*",
         "illuminate/pipeline": "5.0.*",
-        "illuminate/support": "5.0.*",
-        "drnkwati/repack-validation": "dev-master"
+        "illuminate/support": "5.0.*"
     },
     "autoload": {
         "psr-4": {

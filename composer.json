@@ -1,0 +1,50 @@
+{
+    "name": "drnkwati/repack",
+    "description": "Illuminate Packages With Minimal Dependencies.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Taylor Otwell",
+            "email": "taylor@laravel.com"
+        },
+        {
+            "name": "Nkwati Divine",
+            "email": "drnkwati@gmail.com",
+            "homepage": "http://dnkwati.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "vlucas/phpdotenv": "~2.2",
+        "nesbot/carbon": "~1.17.0",
+        "symfony/finder": "2.7.*",
+        "symfony/security-core": "2.7.*",
+        "ircmaxell/password-compat": "1.0.*",
+        "monolog/monolog": "1.*",
+        "swiftmailer/swiftmailer": "~5.0",
+        "drnkwati/repack-support": "^4.1@dev"
+    },
+    "autoload": {
+        "files": [
+            "src/Illuminate/helpers.php"
+        ],
+        "psr-4": {
+            "Illuminate\\": "src/Illuminate/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "4.1-dev"
+        }
+    },
+    "suggest": {
+        "doctrine/dbal": "Allow renaming columns and dropping SQLite columns."
+    },
+    "config": {
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

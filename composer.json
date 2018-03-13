@@ -47,8 +47,8 @@
         }
     },
     "suggest": {
-        "drnkwati/repack-validation": "Required as alternative validation Package (^5.0@dev).",
-        "drnkwati/repack-translation": "Required as alternative translation Package (^5.6@dev).",
+        "drnkwati/repack-validation": "Required as alternative validation package (^5.0@dev).",
+        "drnkwati/repack-translation": "Required as alternative translation package (^5.6@dev).",
         "doctrine/dbal": "Required to rename columns and drop SQLite columns (~2.4).",
         "guzzlehttp/guzzle": "Required to use the Mailgun and Mandrill mail drivers (~5.0).",
         "league/flysystem-aws-s3-v2": "Required to use the Flysystem S3 driver (~1.0).",

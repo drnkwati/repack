@@ -1,73 +1,58 @@
-<?php
-namespace Illuminate\View\Middleware;
+<?php namespace Illuminate\View\Middleware;
 
 use Closure;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Contracts\Routing\Middleware;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 
-class ShareErrorsFromSession
-{
-    /**
-     * The view factory implementation.
-     *
-     * @var \Illuminate\Contracts\View\Factory
-     */
-    protected $view;
+class ShareErrorsFromSession implements Middleware {
 
-    /**
-     * Create a new error binder instance.
-     *
-     * @param  \Illuminate\Contracts\View\Factory $view
-     * @return void
-     */
-    public function __construct(ViewFactory $view)
-    {
-        $this->view = $view;
-    }
+	/**
+	 * The view factory implementation.
+	 *
+	 * @var \Illuminate\Contracts\View\Factory
+	 */
+	protected $view;
 
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @param  \Closure                 $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
-    {
-        $app = $this->view->getEnvironment()->getContainer();
+	/**
+	 * Create a new error binder instance.
+	 *
+	 * @param  \Illuminate\Contracts\View\Factory  $view
+	 * @return void
+	 */
+	public function __construct(ViewFactory $view)
+	{
+		$this->view = $view;
+	}
 
-        // If the current session has an "errors" variable bound to it, we will share
-        // its value with all view instances so the views can easily access errors
-        // without having to bind. An empty bag is set when there aren't errors.
-        if ($this->sessionHasErrors($app)) {
-            $errors = $app['session.store']->get('errors');
+	/**
+	 * Handle an incoming request.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * @param  \Closure  $next
+	 * @return mixed
+	 */
+	public function handle($request, Closure $next)
+	{
+		// If the current session has an "errors" variable bound to it, we will share
+		// its value with all view instances so the views can easily access errors
+		// without having to bind. An empty bag is set when there aren't errors.
+		if ($request->session()->has('errors'))
+		{
+			$this->view->share(
+				'errors', $request->session()->get('errors')
+			);
+		}
 
-            $app['view']->share('errors', $errors);
-        }
+		// Putting the errors in the view for every view allows the developer to just
+		// assume that some errors are always available, which is convenient since
+		// they don't have to continually run checks for the presence of errors.
+		else
+		{
+			$this->view->share('errors', new ViewErrorBag);
+		}
 
-        // Putting the errors in the view for every view allows the developer to just
-        // assume that some errors are always available, which is convenient since
-        // they don't have to continually run checks for the presence of errors.
-        else {
-            $this->view->share('errors', new ViewErrorBag);
-        }
-
-        return $next($request);
-    }
-
-    /**
-     * Determine if the application session has errors.
-     *
-     * @param  \Illuminate\Foundation\Application $app
-     * @return bool
-     */
-    public function sessionHasErrors($app)
-    {
-        $config = $app['config']['session'];
-
-        if (isset($app['session.store']) && !is_null($config['driver'])) {
-            return $app['session.store']->has('errors');
-        }
-    }
+		return $next($request);
+	}
 
 }

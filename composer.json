@@ -23,8 +23,19 @@
         "ircmaxell/password-compat": "~1.0",
         "symfony/finder": "2.7.*",
         "symfony/var-dumper": "2.7.*",
-        "symfony/security-core": "2.7.*"
+        "symfony/security-core": "2.7.*",
 
+        "illuminate/bus": "5.0.*",
+        "illuminate/config": "5.0.*",
+        "illuminate/container": "5.0.*",
+        "illuminate/contracts": "5.0.*",
+        "illuminate/events": "5.0.*",
+        "illuminate/hashing": "5.0.*",
+        "illuminate/log": "5.0.*",
+        "illuminate/mail": "5.0.*",
+        "illuminate/pipeline": "5.0.*",
+        "illuminate/support": "5.0.*",
+        "drnkwati/repack-validation": "dev-master"
     },
     "autoload": {
         "psr-4": {

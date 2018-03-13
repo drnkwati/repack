@@ -38,8 +38,8 @@ class Blueprint {
 	/**
 	 * Create a new schema blueprint.
 	 *
-	 * @param  string   $table
-	 * @param  Closure  $callback
+	 * @param  string  $table
+	 * @param  \Closure|null  $callback
 	 * @return void
 	 */
 	public function __construct($table, Closure $callback = null)
@@ -103,9 +103,14 @@ class Blueprint {
 	 */
 	protected function addImpliedCommands()
 	{
-		if (count($this->columns) > 0 && ! $this->creating())
+		if (count($this->getAddedColumns()) > 0 && ! $this->creating())
 		{
 			array_unshift($this->commands, $this->createCommand('add'));
+		}
+
+		if (count($this->getChangedColumns()) > 0 && ! $this->creating())
+		{
+			array_unshift($this->commands, $this->createCommand('change'));
 		}
 
 		$this->addFluentIndexes();
@@ -526,7 +531,6 @@ class Blueprint {
 	 * @param  int|null	$total
 	 * @param  int|null $places
 	 * @return \Illuminate\Support\Fluent
-	 *
 	 */
 	public function double($column, $total = null, $places = null)
 	{
@@ -570,6 +574,28 @@ class Blueprint {
 	}
 
 	/**
+	 * Create a new json column on the table.
+	 *
+	 * @param  string  $column
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function json($column)
+	{
+		return $this->addColumn('json', $column);
+	}
+
+	/**
+	 * Create a new jsonb column on the table.
+	 *
+	 * @param  string  $column
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function jsonb($column)
+	{
+		return $this->addColumn('jsonb', $column);
+	}
+
+	/**
 	 * Create a new date column on the table.
 	 *
 	 * @param  string  $column
@@ -592,6 +618,17 @@ class Blueprint {
 	}
 
 	/**
+	 * Create a new date-time column (with time zone) on the table.
+	 *
+	 * @param  string  $column
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function dateTimeTz($column)
+	{
+		return $this->addColumn('dateTimeTz', $column);
+	}
+
+	/**
 	 * Create a new time column on the table.
 	 *
 	 * @param  string  $column
@@ -603,6 +640,17 @@ class Blueprint {
 	}
 
 	/**
+	 * Create a new time column (with time zone) on the table.
+	 *
+	 * @param  string  $column
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function timeTz($column)
+	{
+		return $this->addColumn('timeTz', $column);
+	}
+
+	/**
 	 * Create a new timestamp column on the table.
 	 *
 	 * @param  string  $column
@@ -611,6 +659,17 @@ class Blueprint {
 	public function timestamp($column)
 	{
 		return $this->addColumn('timestamp', $column);
+	}
+
+	/**
+	 * Create a new timestamp (with time zone) column on the table.
+	 *
+	 * @param  string  $column
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function timestampTz($column)
+	{
+		return $this->addColumn('timestampTz', $column);
 	}
 
 	/**
@@ -640,11 +699,11 @@ class Blueprint {
 	/**
 	 * Add a "deleted at" timestamp for the table.
 	 *
-	 * @return void
+	 * @return \Illuminate\Support\Fluent
 	 */
 	public function softDeletes()
 	{
-		$this->timestamp('deleted_at')->nullable();
+		return $this->timestamp('deleted_at')->nullable();
 	}
 
 	/**
@@ -662,13 +721,26 @@ class Blueprint {
 	 * Add the proper columns for a polymorphic table.
 	 *
 	 * @param  string  $name
+	 * @param  string|null  $indexName
 	 * @return void
 	 */
-	public function morphs($name)
+	public function morphs($name, $indexName = null)
 	{
 		$this->unsignedInteger("{$name}_id");
 
 		$this->string("{$name}_type");
+
+		$this->index(array("{$name}_id", "{$name}_type"), $indexName);
+	}
+
+	/**
+	 * Adds the `remember_token` column to the table.
+	 *
+	 * @return \Illuminate\Support\Fluent
+	 */
+	public function rememberToken()
+	{
+		return $this->string('remember_token', 100)->nullable();
 	}
 
 	/**
@@ -685,7 +757,7 @@ class Blueprint {
 
 		// If the given "index" is actually an array of columns, the developer means
 		// to drop an index merely by specifying the columns involved without the
-		// conventional name, so we will built the index name from the columns.
+		// conventional name, so we will build the index name from the columns.
 		if (is_array($index))
 		{
 			$columns = $index;
@@ -754,7 +826,7 @@ class Blueprint {
 	 * Remove a column from the schema blueprint.
 	 *
 	 * @param  string  $name
-	 * @return \Illuminate\Database\Schema\Blueprint
+	 * @return $this
 	 */
 	public function removeColumn($name)
 	{
@@ -803,7 +875,7 @@ class Blueprint {
 	}
 
 	/**
-	 * Get the columns that should be added.
+	 * Get the columns on the blueprint.
 	 *
 	 * @return array
 	 */
@@ -820,6 +892,32 @@ class Blueprint {
 	public function getCommands()
 	{
 		return $this->commands;
+	}
+
+	/**
+	 * Get the columns on the blueprint that should be added.
+	 *
+	 * @return array
+	 */
+	public function getAddedColumns()
+	{
+		return array_filter($this->columns, function($column)
+		{
+			return !$column->change;
+		});
+	}
+
+	/**
+	 * Get the columns on the blueprint that should be changed.
+	 *
+	 * @return array
+	 */
+	public function getChangedColumns()
+	{
+		return array_filter($this->columns, function($column)
+		{
+			return !!$column->change;
+		});
 	}
 
 }

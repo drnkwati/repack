@@ -68,6 +68,25 @@ class Builder {
 	}
 
 	/**
+	 * Determine if the given table has given columns.
+	 *
+	 * @param  string  $table
+	 * @param  array   $columns
+	 * @return bool
+	 */
+	public function hasColumns($table, array $columns)
+	{
+		$tableColumns = array_map('strtolower', $this->getColumnListing($table));
+
+		foreach ($columns as $column)
+		{
+			if ( ! in_array(strtolower($column), $tableColumns)) return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Get the column listing for a given table.
 	 *
 	 * @param  string  $table
@@ -85,8 +104,8 @@ class Builder {
 	/**
 	 * Modify a table on the schema.
 	 *
-	 * @param  string   $table
-	 * @param  Closure  $callback
+	 * @param  string    $table
+	 * @param  \Closure  $callback
 	 * @return \Illuminate\Database\Schema\Blueprint
 	 */
 	public function table($table, Closure $callback)
@@ -97,8 +116,8 @@ class Builder {
 	/**
 	 * Create a new table on the schema.
 	 *
-	 * @param  string   $table
-	 * @param  Closure  $callback
+	 * @param  string    $table
+	 * @param  \Closure  $callback
 	 * @return \Illuminate\Database\Schema\Blueprint
 	 */
 	public function create($table, Closure $callback)
@@ -172,8 +191,8 @@ class Builder {
 	/**
 	 * Create a new command set with a Closure.
 	 *
-	 * @param  string   $table
-	 * @param  Closure  $callback
+	 * @param  string  $table
+	 * @param  \Closure|null  $callback
 	 * @return \Illuminate\Database\Schema\Blueprint
 	 */
 	protected function createBlueprint($table, Closure $callback = null)
@@ -182,10 +201,8 @@ class Builder {
 		{
 			return call_user_func($this->resolver, $table, $callback);
 		}
-		else
-		{
-			return new Blueprint($table, $callback);
-		}
+
+		return new Blueprint($table, $callback);
 	}
 
 	/**
@@ -202,7 +219,7 @@ class Builder {
 	 * Set the database connection instance.
 	 *
 	 * @param  \Illuminate\Database\Connection
-	 * @return \Illuminate\Database\Schema\Builder
+	 * @return $this
 	 */
 	public function setConnection(Connection $connection)
 	{

@@ -1,12 +1,14 @@
 <?php namespace Illuminate\View;
 
 use Closure;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Container\Container;
+use InvalidArgumentException;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\View\Engines\EngineResolver;
-use Illuminate\Support\Contracts\ArrayableInterface as Arrayable;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\View\Factory as FactoryContract;
 
-class Environment {
+class Factory implements FactoryContract {
 
 	/**
 	 * The engine implementation.
@@ -25,14 +27,14 @@ class Environment {
 	/**
 	 * The event dispatcher instance.
 	 *
-	 * @var \Illuminate\Events\Dispatcher
+	 * @var \Illuminate\Contracts\Events\Dispatcher
 	 */
 	protected $events;
 
 	/**
 	 * The IoC container instance.
 	 *
-	 * @var \Illuminate\Container\Container
+	 * @var \Illuminate\Contracts\Container\Container
 	 */
 	protected $container;
 
@@ -42,6 +44,13 @@ class Environment {
 	 * @var array
 	 */
 	protected $shared = array();
+
+	/**
+	 * Array of registered view name aliases.
+	 *
+	 * @var array
+	 */
+	protected $aliases = array();
 
 	/**
 	 * All of the registered view names.
@@ -86,11 +95,11 @@ class Environment {
 	protected $renderCount = 0;
 
 	/**
-	 * Create a new view environment instance.
+	 * Create a new view factory instance.
 	 *
 	 * @param  \Illuminate\View\Engines\EngineResolver  $engines
 	 * @param  \Illuminate\View\ViewFinderInterface  $finder
-	 * @param  \Illuminate\Events\Dispatcher  $events
+	 * @param  \Illuminate\Contracts\Events\Dispatcher  $events
 	 * @return void
 	 */
 	public function __construct(EngineResolver $engines, ViewFinderInterface $finder, Dispatcher $events)
@@ -105,6 +114,23 @@ class Environment {
 	/**
 	 * Get the evaluated view contents for the given view.
 	 *
+	 * @param  string  $path
+	 * @param  array   $data
+	 * @param  array   $mergeData
+	 * @return \Illuminate\View\View
+	 */
+	public function file($path, $data = array(), $mergeData = array())
+	{
+		$data = array_merge($mergeData, $this->parseData($data));
+
+		$this->callCreator($view = new View($this, $this->getEngineFromPath($path), $path, $path, $data));
+
+		return $view;
+	}
+
+	/**
+	 * Get the evaluated view contents for the given view.
+	 *
 	 * @param  string  $view
 	 * @param  array   $data
 	 * @param  array   $mergeData
@@ -112,6 +138,10 @@ class Environment {
 	 */
 	public function make($view, $data = array(), $mergeData = array())
 	{
+		if (isset($this->aliases[$view])) $view = $this->aliases[$view];
+
+		$view = $this->normalizeName($view);
+
 		$path = $this->finder->find($view);
 
 		$data = array_merge($mergeData, $this->parseData($data));
@@ -119,6 +149,27 @@ class Environment {
 		$this->callCreator($view = new View($this, $this->getEngineFromPath($path), $view, $path, $data));
 
 		return $view;
+	}
+
+	/**
+	 * Normalize a view name.
+	 *
+	 * @param  string $name
+	 *
+	 * @return string
+	 */
+	protected function normalizeName($name)
+	{
+		$delimiter = ViewFinderInterface::HINT_PATH_DELIMITER;
+
+		if (strpos($name, $delimiter) === false)
+		{
+			return str_replace('/', '.', $name);
+		}
+
+		list($namespace, $name) = explode($delimiter, $name);
+
+		return $namespace . $delimiter . str_replace('/', '.', $name);
 	}
 
 	/**
@@ -135,8 +186,8 @@ class Environment {
 	/**
 	 * Get the evaluated view contents for a named view.
 	 *
-	 * @param string $view
-	 * @param mixed $data
+	 * @param  string  $view
+	 * @param  mixed   $data
 	 * @return \Illuminate\View\View
 	 */
 	public function of($view, $data = array())
@@ -147,13 +198,25 @@ class Environment {
 	/**
 	 * Register a named view.
 	 *
-	 * @param string $view
-	 * @param string $name
+	 * @param  string  $view
+	 * @param  string  $name
 	 * @return void
 	 */
 	public function name($view, $name)
 	{
 		$this->names[$name] = $view;
+	}
+
+	/**
+	 * Add an alias for a view.
+	 *
+	 * @param  string  $view
+	 * @param  string  $alias
+	 * @return void
+	 */
+	public function alias($view, $alias)
+	{
+		$this->aliases[$alias] = $view;
 	}
 
 	/**
@@ -168,7 +231,7 @@ class Environment {
 		{
 			$this->finder->find($view);
 		}
-		catch (\InvalidArgumentException $e)
+		catch (InvalidArgumentException $e)
 		{
 			return false;
 		}
@@ -225,10 +288,17 @@ class Environment {
 	 *
 	 * @param  string  $path
 	 * @return \Illuminate\View\Engines\EngineInterface
+	 *
+	 * @throws \InvalidArgumentException
 	 */
-	protected function getEngineFromPath($path)
+	public function getEngineFromPath($path)
 	{
-		$engine = $this->extensions[$this->getExtension($path)];
+		if ( ! $extension = $this->getExtension($path))
+		{
+			throw new InvalidArgumentException("Unrecognized extension in file: $path");
+		}
+
+		$engine = $this->extensions[$extension];
 
 		return $this->engines->resolve($engine);
 	}
@@ -269,7 +339,7 @@ class Environment {
 	/**
 	 * Register a view creator event.
 	 *
-	 * @param  array|string  $views
+	 * @param  array|string     $views
 	 * @param  \Closure|string  $callback
 	 * @return array
 	 */
@@ -288,7 +358,7 @@ class Environment {
 	/**
 	 * Register multiple view composers via an array.
 	 *
-	 * @param array  $composers
+	 * @param  array  $composers
 	 * @return array
 	 */
 	public function composers(array $composers)
@@ -297,7 +367,7 @@ class Environment {
 
 		foreach ($composers as $callback => $views)
 		{
-			$registered += $this->composer($views, $callback);
+			$registered = array_merge($registered, $this->composer($views, $callback));
 		}
 
 		return $registered;
@@ -308,6 +378,7 @@ class Environment {
 	 *
 	 * @param  array|string  $views
 	 * @param  \Closure|string  $callback
+	 * @param  int|null  $priority
 	 * @return array
 	 */
 	public function composer($views, $callback, $priority = null)
@@ -326,12 +397,15 @@ class Environment {
 	 * Add an event for a given view.
 	 *
 	 * @param  string  $view
-	 * @param  Closure|string  $callback
+	 * @param  \Closure|string  $callback
 	 * @param  string  $prefix
-	 * @return Closure
+	 * @param  int|null  $priority
+	 * @return \Closure
 	 */
 	protected function addViewEvent($view, $callback, $prefix = 'composing: ', $priority = null)
 	{
+		$view = $this->normalizeName($view);
+
 		if ($callback instanceof Closure)
 		{
 			$this->addEventListener($prefix.$view, $callback, $priority);
@@ -347,9 +421,10 @@ class Environment {
 	/**
 	 * Register a class based view composer.
 	 *
-	 * @param  string   $view
-	 * @param  string   $class
-	 * @param  string   $prefix
+	 * @param  string    $view
+	 * @param  string    $class
+	 * @param  string    $prefix
+	 * @param  int|null  $priority
 	 * @return \Closure
 	 */
 	protected function addClassEvent($view, $class, $prefix, $priority = null)
@@ -369,9 +444,10 @@ class Environment {
 	/**
 	 * Add a listener to the event dispatcher.
 	 *
-	 * @param string   $name
-	 * @param \Closure $callback
-	 * @param integer  $priority
+	 * @param  string    $name
+	 * @param  \Closure  $callback
+	 * @param  int      $priority
+	 * @return void
 	 */
 	protected function addEventListener($name, $callback, $priority = null)
 	{
@@ -394,16 +470,14 @@ class Environment {
 	 */
 	protected function buildClassEventCallback($class, $prefix)
 	{
-		$container = $this->container;
-
 		list($class, $method) = $this->parseClassEvent($class, $prefix);
 
 		// Once we have the class and method name, we can build the Closure to resolve
 		// the instance out of the IoC container and call the method on it with the
 		// given arguments that are passed to the Closure as the composer's data.
-		return function() use ($class, $method, $container)
+		return function() use ($class, $method)
 		{
-			$callable = array($container->make($class), $method);
+			$callable = array($this->container->make($class), $method);
 
 			return call_user_func_array($callable, func_get_args());
 		};
@@ -422,12 +496,10 @@ class Environment {
 		{
 			return explode('@', $class);
 		}
-		else
-		{
-			$method = str_contains($prefix, 'composing') ? 'compose' : 'create';
 
-			return array($class, $method);
-		}
+		$method = str_contains($prefix, 'composing') ? 'compose' : 'create';
+
+		return array($class, $method);
 	}
 
 	/**
@@ -463,7 +535,10 @@ class Environment {
 	{
 		if ($content === '')
 		{
-			ob_start() && $this->sectionStack[] = $section;
+			if (ob_start())
+			{
+				$this->sectionStack[] = $section;
+			}
 		}
 		else
 		{
@@ -548,13 +623,9 @@ class Environment {
 		if (isset($this->sections[$section]))
 		{
 			$content = str_replace('@parent', $content, $this->sections[$section]);
+		}
 
-			$this->sections[$section] = $content;
-		}
-		else
-		{
-			$this->sections[$section] = $content;
-		}
+		$this->sections[$section] = $content;
 	}
 
 	/**
@@ -566,7 +637,18 @@ class Environment {
 	 */
 	public function yieldContent($section, $default = '')
 	{
-		return isset($this->sections[$section]) ? $this->sections[$section] : $default;
+		$sectionContent = $default;
+
+		if (isset($this->sections[$section]))
+		{
+			$sectionContent = $this->sections[$section];
+		}
+
+		$sectionContent = str_replace('@@parent', '--parent--holder--', $sectionContent);
+
+		return str_replace(
+			'--parent--holder--', '@parent', str_replace('@parent', '', $sectionContent)
+		);
 	}
 
 	/**
@@ -576,6 +658,8 @@ class Environment {
 	 */
 	public function flushSections()
 	{
+		$this->renderCount = 0;
+
 		$this->sections = array();
 
 		$this->sectionStack = array();
@@ -659,9 +743,9 @@ class Environment {
 	/**
 	 * Register a valid view extension and its engine.
 	 *
-	 * @param  string   $extension
-	 * @param  string   $engine
-	 * @param  Closure  $resolver
+	 * @param  string    $extension
+	 * @param  string    $engine
+	 * @param  \Closure  $resolver
 	 * @return void
 	 */
 	public function addExtension($extension, $engine, $resolver = null)
@@ -711,6 +795,7 @@ class Environment {
 	/**
 	 * Set the view finder instance.
 	 *
+	 * @param  \Illuminate\View\ViewFinderInterface  $finder
 	 * @return void
 	 */
 	public function setFinder(ViewFinderInterface $finder)
@@ -721,7 +806,7 @@ class Environment {
 	/**
 	 * Get the event dispatcher instance.
 	 *
-	 * @return \Illuminate\Events\Dispatcher
+	 * @return \Illuminate\Contracts\Events\Dispatcher
 	 */
 	public function getDispatcher()
 	{
@@ -731,7 +816,7 @@ class Environment {
 	/**
 	 * Set the event dispatcher instance.
 	 *
-	 * @param  \Illuminate\Events\Dispatcher
+	 * @param  \Illuminate\Contracts\Events\Dispatcher
 	 * @return void
 	 */
 	public function setDispatcher(Dispatcher $events)
@@ -742,7 +827,7 @@ class Environment {
 	/**
 	 * Get the IoC container instance.
 	 *
-	 * @return \Illuminate\Container\Container
+	 * @return \Illuminate\Contracts\Container\Container
 	 */
 	public function getContainer()
 	{
@@ -752,7 +837,7 @@ class Environment {
 	/**
 	 * Set the IoC container instance.
 	 *
-	 * @param  \Illuminate\Container\Container  $container
+	 * @param  \Illuminate\Contracts\Container\Container  $container
 	 * @return void
 	 */
 	public function setContainer(Container $container)
@@ -780,6 +865,17 @@ class Environment {
 	public function getShared()
 	{
 		return $this->shared;
+	}
+
+	/**
+	 * Check if section exists.
+	 *
+	 * @param  string  $name
+	 * @return bool
+	 */
+	public function hasSection($name)
+	{
+		return array_key_exists($name, $this->sections);
 	}
 
 	/**

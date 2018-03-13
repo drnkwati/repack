@@ -24,7 +24,10 @@ class Seeder {
 	 *
 	 * @return void
 	 */
-	public function run() {}
+	public function run()
+	{
+		//
+	}
 
 	/**
 	 * Seed the given connection from the given path.
@@ -73,7 +76,7 @@ class Seeder {
 	 * Set the IoC container instance.
 	 *
 	 * @param  \Illuminate\Container\Container  $container
-	 * @return \Illuminate\Database\Seeder
+	 * @return $this
 	 */
 	public function setContainer(Container $container)
 	{
@@ -86,7 +89,7 @@ class Seeder {
 	 * Set the console command instance.
 	 *
 	 * @param  \Illuminate\Console\Command  $command
-	 * @return \Illuminate\Database\Seeder
+	 * @return $this
 	 */
 	public function setCommand(Command $command)
 	{

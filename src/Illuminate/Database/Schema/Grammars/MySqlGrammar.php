@@ -11,10 +11,10 @@ class MySqlGrammar extends Grammar {
 	 *
 	 * @var array
 	 */
-	protected $modifiers = array('Unsigned', 'Nullable', 'Default', 'Increment', 'After');
+	protected $modifiers = array('Unsigned', 'Nullable', 'Default', 'Increment', 'Comment', 'After');
 
 	/**
-	 * The possible column serials
+	 * The possible column serials.
 	 *
 	 * @var array
 	 */
@@ -33,7 +33,6 @@ class MySqlGrammar extends Grammar {
 	/**
 	 * Compile the query to determine the list of columns.
 	 *
-	 * @param  string  $table
 	 * @return string
 	 */
 	public function compileColumnExists()
@@ -91,7 +90,7 @@ class MySqlGrammar extends Grammar {
 	}
 
 	/**
-	 * Compile a create table command.
+	 * Compile an add column command.
 	 *
 	 * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
 	 * @param  \Illuminate\Support\Fluent  $command
@@ -387,7 +386,7 @@ class MySqlGrammar extends Grammar {
 	 */
 	protected function typeFloat(Fluent $column)
 	{
-		return "float({$column->total}, {$column->places})";
+		return $this->typeDouble($column);
 	}
 
 	/**
@@ -402,10 +401,8 @@ class MySqlGrammar extends Grammar {
 		{
 			return "double({$column->total}, {$column->places})";
 		}
-		else
-		{
-			return 'double';
-		}
+
+		return 'double';
 	}
 
 	/**
@@ -442,6 +439,28 @@ class MySqlGrammar extends Grammar {
 	}
 
 	/**
+	 * Create the column definition for a json type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeJson(Fluent $column)
+	{
+		return 'text';
+	}
+
+	/**
+	 * Create the column definition for a jsonb type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeJsonb(Fluent $column)
+	{
+		return "text";
+	}
+
+	/**
 	 * Create the column definition for a date type.
 	 *
 	 * @param  \Illuminate\Support\Fluent  $column
@@ -464,6 +483,17 @@ class MySqlGrammar extends Grammar {
 	}
 
 	/**
+	 * Create the column definition for a date-time type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeDateTimeTz(Fluent $column)
+	{
+		return 'datetime';
+	}
+
+	/**
 	 * Create the column definition for a time type.
 	 *
 	 * @param  \Illuminate\Support\Fluent  $column
@@ -475,12 +505,36 @@ class MySqlGrammar extends Grammar {
 	}
 
 	/**
+	 * Create the column definition for a time type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeTimeTz(Fluent $column)
+	{
+		return 'time';
+	}
+
+	/**
 	 * Create the column definition for a timestamp type.
 	 *
 	 * @param  \Illuminate\Support\Fluent  $column
 	 * @return string
 	 */
 	protected function typeTimestamp(Fluent $column)
+	{
+		if ( ! $column->nullable) return 'timestamp default 0';
+
+		return 'timestamp';
+	}
+
+	/**
+	 * Create the column definition for a timestamp type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeTimestampTz(Fluent $column)
 	{
 		if ( ! $column->nullable) return 'timestamp default 0';
 
@@ -564,6 +618,21 @@ class MySqlGrammar extends Grammar {
 		if ( ! is_null($column->after))
 		{
 			return ' after '.$this->wrap($column->after);
+		}
+	}
+
+	/**
+	 * Get the SQL for an "comment" column modifier.
+	 *
+	 * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string|null
+	 */
+	protected function modifyComment(Blueprint $blueprint, Fluent $column)
+	{
+		if ( ! is_null($column->comment))
+		{
+			return ' comment "'.$column->comment.'"';
 		}
 	}
 

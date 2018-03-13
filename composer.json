@@ -20,7 +20,6 @@
         "ext-mbstring": "*",
         "nesbot/carbon": "~1.17.0",
         "league/flysystem": "~1.0",
-        "ircmaxell/password-compat": "~1.0",
         "symfony/finder": "2.7.*",
         "symfony/var-dumper": "2.7.*",
         "symfony/security-core": "2.7.*",

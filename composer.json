@@ -14,26 +14,26 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "ext-mcrypt": "*",
+        "php": ">=5.5.9",
         "ext-openssl": "*",
         "ext-mbstring": "*",
         "nesbot/carbon": "~1.17.0",
         "league/flysystem": "~1.0",
-        "symfony/finder": "2.7.*",
-        "symfony/var-dumper": "2.7.*",
-        "symfony/security-core": "2.7.*",
+        "symfony/debug": "2.8.*|3.0.*",
+        "symfony/finder": "2.8.*|3.0.*",
+        "symfony/var-dumper": "2.8.*|3.0.*",
 
-        "illuminate/bus": "5.0.*",
-        "illuminate/config": "5.0.*",
-        "illuminate/container": "5.0.*",
-        "illuminate/contracts": "5.0.*",
-        "illuminate/events": "5.0.*",
-        "illuminate/hashing": "5.0.*",
-        "illuminate/log": "5.0.*",
-        "illuminate/mail": "5.0.*",
-        "illuminate/pipeline": "5.0.*",
-        "illuminate/support": "5.0.*",
+        "illuminate/Broadcasting": "5.2.*",
+        "illuminate/bus": "5.2.*",
+        "illuminate/encryption": "5.2.*",
+        "illuminate/container": "5.2.*",
+        "illuminate/contracts": "5.2.*",
+        "illuminate/events": "5.2.*",
+        "illuminate/hashing": "5.2.*",
+        "illuminate/log": "5.2.*",
+        "illuminate/mail": "5.2.*",
+        "illuminate/pipeline": "5.2.*",
+        "illuminate/support": "5.2.*",
         "drnkwati/repack-pagination": "^5.0@dev"
     },
     "autoload": {
@@ -43,7 +43,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "5.0-dev"
+            "dev-master": "5.2-dev"
         }
     },
     "suggest": {

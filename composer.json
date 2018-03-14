@@ -18,7 +18,7 @@
         "ext-mcrypt": "*",
         "ext-openssl": "*",
         "ext-mbstring": "*",
-        "nesbot/carbon": "~1.17.0",
+        "nesbot/carbon": ">=1.17.0",
         "league/flysystem": "~1.0",
         "symfony/finder": "2.7.*",
         "symfony/var-dumper": "2.7.*",
@@ -34,7 +34,7 @@
         "illuminate/mail": "5.0.*",
         "illuminate/pipeline": "5.0.*",
         "illuminate/support": "5.0.*",
-        "drnkwati/repack-pagination": "^5.0@dev"
+        "drnkwati/repack-pagination": "^5.6@dev"
     },
     "autoload": {
         "psr-4": {

@@ -24,6 +24,9 @@
         "swiftmailer/swiftmailer": "~5.0",
         "drnkwati/repack-support": "^4.1@dev"
     },
+    "require-dev": {
+        "symfony/var-dumper": "2.7.*",
+    },
     "autoload": {
         "files": [
             "src/Illuminate/helpers.php"

@@ -33,8 +33,7 @@
         "illuminate/log": "5.2.*",
         "illuminate/mail": "5.2.*",
         "illuminate/pipeline": "5.2.*",
-        "illuminate/support": "5.2.*",
-        "drnkwati/repack-pagination": "^5.6@dev"
+        "illuminate/support": "5.2.*"
     },
     "autoload": {
         "psr-4": {

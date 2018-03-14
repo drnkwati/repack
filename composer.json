@@ -14,15 +14,27 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.4.0",
+        "ext-mcrypt": "*",
+        "ext-openssl": "*",
+        "ext-mbstring": "*",
         "nesbot/carbon": "~1.17.0",
-        "illuminate/container": "4.1.*",
-        "drnkwati/repack-support": "^4.1@dev",
-        "symfony/security-core": "2.7.*",
+        "league/flysystem": "~1.0",
         "symfony/finder": "2.7.*",
-        "ircmaxell/password-compat": "1.0.*",
-        "monolog/monolog": "1.*",
-        "swiftmailer/swiftmailer": "~5.0"
+        "symfony/var-dumper": "2.7.*",
+        "symfony/security-core": "2.7.*",
+
+        "illuminate/bus": "5.0.*",
+        "illuminate/config": "5.0.*",
+        "illuminate/container": "5.0.*",
+        "illuminate/contracts": "5.0.*",
+        "illuminate/events": "5.0.*",
+        "illuminate/hashing": "5.0.*",
+        "illuminate/log": "5.0.*",
+        "illuminate/mail": "5.0.*",
+        "illuminate/pipeline": "5.0.*",
+        "illuminate/support": "5.0.*",
+        "drnkwati/repack-pagination": "^5.0@dev"
     },
     "autoload": {
         "psr-4": {
@@ -31,11 +43,16 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "4.1-dev"
+            "dev-master": "5.0-dev"
         }
     },
     "suggest": {
-        "doctrine/dbal": "Allow renaming columns and dropping SQLite columns."
+        "drnkwati/repack-validation": "Required as alternative validation package (^5.0@dev).",
+        "drnkwati/repack-translation": "Required as alternative translation package (^5.6@dev).",
+        "doctrine/dbal": "Required to rename columns and drop SQLite columns (~2.4).",
+        "guzzlehttp/guzzle": "Required to use the Mailgun and Mandrill mail drivers (~5.0).",
+        "league/flysystem-aws-s3-v2": "Required to use the Flysystem S3 driver (~1.0).",
+        "league/flysystem-rackspace": "Required to use the Flysystem Rackspace driver (~1.0)."
     },
     "config": {
         "preferred-install": "dist",
